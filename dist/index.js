@@ -15810,7 +15810,7 @@ var Vditor = /** @class */ (function (_super) {
             enableInput: false,
         });
     };
-    /* 设置光标 */
+    /** 设置光标 */
     Vditor.prototype.setCursor = function (range) {
         (0,selection/* setSelectionFocus */.Hc)(range);
     };

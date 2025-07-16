@@ -483,7 +483,7 @@ class Vditor extends VditorMethod {
             enableInput: false,
         });
     }
-    /* 设置光标 */
+    /** 设置光标 */
     public setCursor(range: Range) {
         setSelectionFocus(range);
     }

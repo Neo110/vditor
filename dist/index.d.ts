@@ -77,6 +77,7 @@ declare class Vditor extends VditorMethod {
     unHlCommentIds(ids: string[]): void;
     /** 删除评论 */
     removeCommentIds(removeIds: string[]): void;
+    /** 设置光标 */
     setCursor(range: Range): void;
     private init;
 }
