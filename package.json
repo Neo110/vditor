@@ -59,9 +59,9 @@
         "webpack-dev-server": "^5.1.0"
     },
     "license": "MIT",
-    "repository": "git://github.com/Vanessa219/vditor.git",
+    "repository": "git://github.com/Neo110/vditor.git",
     "bugs": {
-        "url": "https://github.com/Vanessa219/vditor/issues"
+        "url": "https://github.com/Neo110/vditor/issues"
     },
     "scripts": {
         "lint": "eslint eslint.config.mjs",
