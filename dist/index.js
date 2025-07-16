@@ -15811,9 +15811,17 @@ var Vditor = /** @class */ (function (_super) {
         });
     };
     /** 设置光标 */
-    Vditor.prototype.setUpdateValue = function (value) {
+    Vditor.prototype.setUpdateValue = function (value, render) {
+        if (render === void 0) { render = true; }
+        // 设置光标
         var range = (0,selection/* getEditorRange */.zh)(this.vditor);
-        this.setValue(value);
+        range.collapse(true);
+        renderDomByMd(this.vditor, value, {
+            enableAddUndoStack: true,
+            enableHint: false,
+            enableInput: false,
+        });
+        // 操作 DOM 后恢复光标
         (0,selection/* setSelectionFocus */.Hc)(range);
     };
     Vditor.prototype.init = function (id, mergedOptions) {

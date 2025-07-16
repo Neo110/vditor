@@ -78,7 +78,7 @@ declare class Vditor extends VditorMethod {
     /** 删除评论 */
     removeCommentIds(removeIds: string[]): void;
     /** 设置光标 */
-    setUpdateValue(value: string): void;
+    setUpdateValue(value: string, render?: boolean): void;
     private init;
 }
 export default Vditor;

@@ -484,11 +484,18 @@ class Vditor extends VditorMethod {
         });
     }
     /** 设置光标 */
-    public setUpdateValue(value:string) {
+    public setUpdateValue(value:string,render = true) {
+        // 设置光标
         const range = getEditorRange(this.vditor);
-        // this.setValue(value);
-        range.endOffset = range.commonAncestorContainer.textContent.length;
+        range.collapse(true);
+        renderDomByMd(this.vditor, value, {
+                enableAddUndoStack: true,
+                enableHint: false,
+                enableInput: false,
+            });
+        // 操作 DOM 后恢复光标
         setSelectionFocus(range);
+
     }
 
     private init(id: HTMLElement, mergedOptions: IOptions) {
