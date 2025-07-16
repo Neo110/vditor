@@ -15811,7 +15811,9 @@ var Vditor = /** @class */ (function (_super) {
         });
     };
     /** 设置光标 */
-    Vditor.prototype.setCursor = function (range) {
+    Vditor.prototype.setUpdateValue = function (value) {
+        var range = (0,selection/* getEditorRange */.zh)(this.vditor);
+        this.setValue(value);
         (0,selection/* setSelectionFocus */.Hc)(range);
     };
     Vditor.prototype.init = function (id, mergedOptions) {
