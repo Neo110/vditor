@@ -484,7 +484,9 @@ class Vditor extends VditorMethod {
         });
     }
     /** 设置光标 */
-    public setCursor(range: Range) {
+    public setUpdateValue(value:string) {
+        const range = getEditorRange(this.vditor);
+        this.setValue(value);
         setSelectionFocus(range);
     }
 
