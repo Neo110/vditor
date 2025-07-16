@@ -486,7 +486,8 @@ class Vditor extends VditorMethod {
     /** 设置光标 */
     public setUpdateValue(value:string) {
         const range = getEditorRange(this.vditor);
-        this.setValue(value);
+        // this.setValue(value);
+        range.endOffset = range.commonAncestorContainer.textContent.length;
         setSelectionFocus(range);
     }
 
