@@ -1,8 +1,10 @@
-import {Constants} from "../constants";
-import {hidePanel} from "../toolbar/setToolbar";
-import {isCtrl, isFirefox} from "../util/compatibility";
+import { Constants } from "../constants";
+import { getMarkdown } from "../markdown/getMarkdown";
+import { hidePanel } from "../toolbar/setToolbar";
+import { isCtrl, isFirefox } from "../util/compatibility";
 import {
     blurEvent,
+    compositionEvent,
     copyEvent, cutEvent, dblclickEvent,
     dropEvent,
     focusEvent,
@@ -10,25 +12,24 @@ import {
     scrollCenter,
     selectEvent,
 } from "../util/editorCommonEvent";
-import {isHeadingMD, isHrMD, paste} from "../util/fixBrowserBehavior";
+import { isHeadingMD, isHrMD, paste } from "../util/fixBrowserBehavior";
 import {
     hasClosestBlock, hasClosestByAttribute,
     hasClosestByClassName, hasClosestByMatchTag,
 } from "../util/hasClosest";
-import {hasClosestByHeadings} from "../util/hasClosestByHeadings";
+import { hasClosestByHeadings } from "../util/hasClosestByHeadings";
 import {
     getCursorPosition,
     getEditorRange,
     getSelectPosition,
     setRangeByWbr, setSelectionFocus,
-} from "../util/selection"
-import {clickToc, renderToc} from "../util/toc";
-import {afterRenderEvent} from "./afterRenderEvent";
-import {genImagePopover, genLinkRefPopover, highlightToolbarWYSIWYG} from "./highlightToolbarWYSIWYG";
-import {getRenderElementNextNode, modifyPre} from "./inlineTag";
-import {input} from "./input";
-import {showCode} from "./showCode";
-import {getMarkdown} from "../markdown/getMarkdown";
+} from "../util/selection";
+import { clickToc, renderToc } from "../util/toc";
+import { afterRenderEvent } from "./afterRenderEvent";
+import { genImagePopover, genLinkRefPopover, highlightToolbarWYSIWYG } from "./highlightToolbarWYSIWYG";
+import { getRenderElementNextNode, modifyPre } from "./inlineTag";
+import { input } from "./input";
+import { showCode } from "./showCode";
 
 class WYSIWYG {
     public range: Range;
@@ -69,6 +70,7 @@ class WYSIWYG {
         dropEvent(vditor, this.element);
         copyEvent(vditor, this.element, this.copy);
         cutEvent(vditor, this.element, this.copy);
+        compositionEvent(vditor, this.element)
 
         if (vditor.options.comment.enable) {
             this.selectPopover.querySelector("button").onclick = () => {
@@ -220,7 +222,7 @@ class WYSIWYG {
             }
             event.clipboardData.setData("text/plain", codeText);
             event.clipboardData.setData("text/html", "");
-            return;
+            return codeText;
         }
 
         const aElement = hasClosestByMatchTag(range.startContainer, "A");
@@ -233,7 +235,7 @@ class WYSIWYG {
             event.clipboardData.setData("text/plain",
                 `[${range.toString()}](${aElement.getAttribute("href")}${aTitle})`);
             event.clipboardData.setData("text/html", "");
-            return;
+            return `[${range.toString()}](${aElement.getAttribute("href")}${aTitle})`;
         }
 
         const tempElement = document.createElement("div");
@@ -241,6 +243,7 @@ class WYSIWYG {
 
         event.clipboardData.setData("text/plain", vditor.lute.VditorDOM2Md(tempElement.innerHTML).trim());
         event.clipboardData.setData("text/html", "");
+        return vditor.lute.VditorDOM2Md(tempElement.innerHTML).trim()
     }
 
     private bindEvent(vditor: IVditor) {
@@ -575,4 +578,5 @@ class WYSIWYG {
     }
 }
 
-export {WYSIWYG};
+export { WYSIWYG };
+

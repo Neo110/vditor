@@ -12,3 +12,14 @@ export declare const getSelectPosition: (selectElement: HTMLElement, editorEleme
 export declare const setSelectionByPosition: (start: number, end: number, editor: HTMLElement) => Range;
 export declare const setRangeByWbr: (element: HTMLElement, range: Range) => void;
 export declare const insertHTML: (html: string, vditor: IVditor) => void;
+export declare const serializeRange: (vditor: IVditor) => {
+    start: {
+        path: number[];
+        offset: number;
+    };
+    end: {
+        path: number[];
+        offset: number;
+    };
+};
+export declare const deserializeRange: (vditor: IVditor, serializedData: any) => void;

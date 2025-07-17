@@ -1804,7 +1804,7 @@ var merge = function () {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Hc": () => (/* binding */ setSelectionFocus)
 /* harmony export */ });
-/* unused harmony exports getEditorRange, getCursorPosition, selectIsEditor, getSelectPosition, setSelectionByPosition, setRangeByWbr, insertHTML */
+/* unused harmony exports getEditorRange, getCursorPosition, selectIsEditor, getSelectPosition, setSelectionByPosition, setRangeByWbr, insertHTML, serializeRange, deserializeRange */
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(145);
 
 
@@ -2079,6 +2079,59 @@ var insertHTML = function (html, vditor) {
         pasteTemplate.innerHTML = html;
         range.insertNode(pasteTemplate.content.cloneNode(true));
         range.collapse(false);
+        setSelectionFocus(range);
+    }
+};
+// 序列化 Range 到路径
+var serializeRange = function (vditor) {
+    var _a;
+    var range = getEditorRange(vditor);
+    if (!range)
+        return null;
+    // 获取编辑区域根节点（根据模式选择）
+    var editorRoot = (_a = vditor.wysiwyg) === null || _a === void 0 ? void 0 : _a.element;
+    // 序列化 Range 到路径
+    var serializeRangeToPath = function (container, offset) {
+        var path = [];
+        var node = container;
+        while (node !== editorRoot) {
+            var parent_2 = node.parentNode;
+            path.unshift(Array.from(parent_2.childNodes).indexOf(node));
+            node = parent_2;
+        }
+        return { path: path, offset: offset };
+    };
+    return {
+        start: serializeRangeToPath(range.startContainer, range.startOffset),
+        end: serializeRangeToPath(range.endContainer, range.endOffset)
+    };
+};
+var deserializeRange = function (vditor, serializedData) {
+    var _a, _b;
+    var editorRoot = ((_a = vditor.wysiwyg) === null || _a === void 0 ? void 0 : _a.element) || ((_b = vditor.sv) === null || _b === void 0 ? void 0 : _b.element);
+    // 通过路径获取 DOM 节点
+    var getNodeFromPath = function (path) {
+        // 将editorRoot作为Node类型
+        var node = editorRoot;
+        for (var _i = 0, path_1 = path; _i < path_1.length; _i++) {
+            var index = path_1[_i];
+            if (node.childNodes.length > index) {
+                node = node.childNodes[index];
+            }
+            else {
+                return null;
+            }
+        }
+        return node;
+    };
+    // 重建 Range
+    var range = document.createRange();
+    var startNode = getNodeFromPath(serializedData.start.path);
+    var endNode = getNodeFromPath(serializedData.end.path);
+    if (startNode && endNode) {
+        range.setStart(startNode, serializedData.start.offset);
+        range.setEnd(endNode, serializedData.end.offset);
+        // 恢复选区
         setSelectionFocus(range);
     }
 };

@@ -782,6 +782,11 @@ interface IOptions {
     /** 编辑器中选中文字后触发 */
     select?(value: string): void;
 
+    /** 输入法输入完成后触发 */
+    inputComposition?(value: string): void;
+    /** 复制后触 */
+    copy?(value: string): void;
+    cut?(value: string) : void;
     /** 编辑器中未选中文字后触发 */
     unSelect?(): void;
 }

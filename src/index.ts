@@ -31,7 +31,7 @@ import { execAfterRender, insertEmptyBlock } from "./ts/util/fixBrowserBehavior"
 import { getSelectText } from "./ts/util/getSelectText";
 import { Options } from "./ts/util/Options";
 import { processCodeRender } from "./ts/util/processCode";
-import { getCursorPosition, getEditorRange, insertHTML, setSelectionFocus } from "./ts/util/selection";
+import { deserializeRange, getCursorPosition, getEditorRange, insertHTML, serializeRange, setSelectionFocus } from "./ts/util/selection";
 import { afterRenderEvent } from "./ts/wysiwyg/afterRenderEvent";
 import { WYSIWYG } from "./ts/wysiwyg/index";
 import { input } from "./ts/wysiwyg/input";
@@ -483,19 +483,32 @@ class Vditor extends VditorMethod {
             enableInput: false,
         });
     }
+
+    /** 当前光标位置序列化 */
+    public getCursorSerializeRange() {
+        return serializeRange(this.vditor)
+    }
+    /** 当前光标位置反序列化 */
+    public setCursorDeserializeRange(serializedData: any) {
+        deserializeRange(this.vditor, serializedData)
+        this.vditor.wysiwyg.element.focus();
+    }
     /** 设置光标 */
-    public setUpdateValue(value:string,render = true) {
-        // 设置光标
+    public setUpdateValue(value: string, render = true) {
+        // 获取当前选区
+        console.log("11");  // 可以保留
         const range = getEditorRange(this.vditor);
         range.collapse(true);
-        renderDomByMd(this.vditor, value, {
-                enableAddUndoStack: true,
-                enableHint: false,
-                enableInput: false,
-            });
-        // 操作 DOM 后恢复光标
-        setSelectionFocus(range);
 
+
+        // 设置光标位置：向前移动2个位置（但需要处理边界）
+        const newOffset = Math.max(0, range.startOffset - 2); // 确保不会变成负数
+        // 检查节点是否有效
+        range.setStart(range.startContainer, newOffset);
+        range.collapse(true); // 确保折叠选区
+        console.log("33");  // 可以保留
+        setSelectionFocus(range);
+        console.log("6688");  // 可以保留
     }
 
     private init(id: HTMLElement, mergedOptions: IOptions) {

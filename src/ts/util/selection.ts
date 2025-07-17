@@ -1,6 +1,6 @@
-import {Constants} from "../constants";
-import {isChrome} from "./compatibility";
-import {hasClosestBlock, hasClosestByClassName} from "./hasClosest";
+import { Constants } from "../constants";
+import { isChrome } from "./compatibility";
+import { hasClosestBlock, hasClosestByClassName } from "./hasClosest";
 
 export const getEditorRange = (vditor: IVditor) => {
     let range: Range;
@@ -62,7 +62,7 @@ export const getCursorPosition = (editor: HTMLElement) => {
             if (!cursorRect) {
                 let parentElement = range.startContainer.childNodes[range.startOffset] as HTMLElement;
                 while (!parentElement.getClientRects ||
-                (parentElement.getClientRects && parentElement.getClientRects().length === 0)) {
+                    (parentElement.getClientRects && parentElement.getClientRects().length === 0)) {
                     parentElement = parentElement.parentElement;
                 }
                 cursorRect = parentElement.getClientRects()[0];
@@ -273,3 +273,61 @@ export const insertHTML = (html: string, vditor: IVditor) => {
         setSelectionFocus(range);
     }
 };
+
+
+// 序列化 Range 到路径
+export const serializeRange = (vditor: IVditor) => {
+    const range = getEditorRange(vditor)
+    if (!range) return null;
+
+    // 获取编辑区域根节点（根据模式选择）
+    const editorRoot = vditor.wysiwyg?.element;
+
+    // 序列化 Range 到路径
+    const serializeRangeToPath = (container: Node, offset: number) => {
+        const path = [];
+        let node = container;
+        while (node !== editorRoot) {
+            const parent = node.parentNode;
+            path.unshift(Array.from(parent.childNodes).indexOf(node as ChildNode));
+            node = parent;
+        }
+        return { path, offset };
+    };
+
+    return {
+        start: serializeRangeToPath(range.startContainer, range.startOffset),
+        end: serializeRangeToPath(range.endContainer, range.endOffset)
+    }
+}
+
+export const deserializeRange = (vditor: IVditor, serializedData: any) => {
+    const editorRoot = vditor.wysiwyg?.element || vditor.sv?.element;
+
+    // 通过路径获取 DOM 节点
+    const getNodeFromPath = (path: number[]): Node | null => {
+        // 将editorRoot作为Node类型
+        let node: Node = editorRoot as Node;
+        for (const index of path) {
+            if (node.childNodes.length > index) {
+                node = node.childNodes[index];
+            } else {
+                return null;
+            }
+        }
+        return node;
+    };
+
+    // 重建 Range
+    const range = document.createRange();
+    const startNode = getNodeFromPath(serializedData.start.path);
+    const endNode = getNodeFromPath(serializedData.end.path);
+
+    if (startNode && endNode) {
+        range.setStart(startNode, serializedData.start.offset);
+        range.setEnd(endNode, serializedData.end.offset);
+
+        // 恢复选区
+        setSelectionFocus(range);
+    }
+}

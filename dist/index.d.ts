@@ -77,6 +77,19 @@ declare class Vditor extends VditorMethod {
     unHlCommentIds(ids: string[]): void;
     /** 删除评论 */
     removeCommentIds(removeIds: string[]): void;
+    /** 当前光标位置序列化 */
+    getCursorSerializeRange(): {
+        start: {
+            path: number[];
+            offset: number;
+        };
+        end: {
+            path: number[];
+            offset: number;
+        };
+    };
+    /** 当前光标位置反序列化 */
+    setCursorDeserializeRange(serializedData: any): void;
     /** 设置光标 */
     setUpdateValue(value: string, render?: boolean): void;
     private init;

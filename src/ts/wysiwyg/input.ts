@@ -2,13 +2,13 @@ import {
     getTopList,
     hasClosestBlock, hasClosestByAttribute, hasTopClosestByTag,
 } from "../util/hasClosest";
-import {hasClosestByTag} from "../util/hasClosestByHeadings";
-import {log} from "../util/log";
-import {processCodeRender} from "../util/processCode";
-import {setRangeByWbr} from "../util/selection";
-import {renderToc} from "../util/toc";
-import {afterRenderEvent} from "./afterRenderEvent";
-import {previoueIsEmptyA} from "./inlineTag";
+import { hasClosestByTag } from "../util/hasClosestByHeadings";
+import { log } from "../util/log";
+import { processCodeRender } from "../util/processCode";
+import { setRangeByWbr } from "../util/selection";
+import { renderToc } from "../util/toc";
+import { afterRenderEvent } from "./afterRenderEvent";
+import { previoueIsEmptyA } from "./inlineTag";
 
 export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
     let blockElement = hasClosestBlock(range.startContainer);
@@ -31,6 +31,7 @@ export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
         && event.inputType !== ""   // document.execCommand('unlink', false)
         || !event
     ) {
+        console.log(" ### event.inputType ", event);
         const previousAEmptyElement = previoueIsEmptyA(range.startContainer);
         if (previousAEmptyElement) {
             // 链接结尾回车不应该复制到下一行 https://github.com/Vanessa219/vditor/issues/163

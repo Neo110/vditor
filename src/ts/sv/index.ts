@@ -1,4 +1,4 @@
-import {isCtrl, isFirefox} from "../util/compatibility";
+import { isCtrl, isFirefox } from "../util/compatibility";
 import {
     blurEvent,
     copyEvent, cutEvent,
@@ -8,10 +8,10 @@ import {
     scrollCenter,
     selectEvent,
 } from "../util/editorCommonEvent";
-import {paste} from "../util/fixBrowserBehavior";
-import {getSelectText} from "../util/getSelectText";
-import {inputEvent} from "./inputEvent";
-import {processAfterRender} from "./process";
+import { paste } from "../util/fixBrowserBehavior";
+import { getSelectText } from "../util/getSelectText";
+import { inputEvent } from "./inputEvent";
+import { processAfterRender } from "./process";
 
 class Editor {
     public range: Range;
@@ -42,7 +42,9 @@ class Editor {
     private copy(event: ClipboardEvent, vditor: IVditor) {
         event.stopPropagation();
         event.preventDefault();
-        event.clipboardData.setData("text/plain", getSelectText(vditor[vditor.currentMode].element));
+        const text=getSelectText(vditor[vditor.currentMode].element)
+        event.clipboardData.setData("text/plain", text);
+        return text;
     }
 
     private bindEvent(vditor: IVditor) {
@@ -122,4 +124,5 @@ class Editor {
     }
 }
 
-export {Editor};
+export { Editor };
+

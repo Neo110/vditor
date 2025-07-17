@@ -1,5 +1,6 @@
-import {Constants} from "../constants";
-import {isCtrl, isFirefox} from "../util/compatibility";
+import { Constants } from "../constants";
+import { hidePanel } from "../toolbar/setToolbar";
+import { isCtrl, isFirefox } from "../util/compatibility";
 import {
     blurEvent,
     copyEvent, cutEvent, dblclickEvent,
@@ -9,18 +10,17 @@ import {
     scrollCenter,
     selectEvent,
 } from "../util/editorCommonEvent";
-import {paste} from "../util/fixBrowserBehavior";
-import {hasClosestByAttribute, hasClosestByClassName} from "../util/hasClosest";
+import { paste } from "../util/fixBrowserBehavior";
+import { hasClosestByAttribute, hasClosestByClassName } from "../util/hasClosest";
 import {
     getEditorRange, setRangeByWbr,
     setSelectionFocus,
 } from "../util/selection";
-import {clickToc} from "../util/toc";
-import {expandMarker} from "./expandMarker";
-import {highlightToolbarIR} from "./highlightToolbarIR";
-import {input} from "./input";
-import {processAfterRender, processHint} from "./process";
-import {hidePanel} from "../toolbar/setToolbar";
+import { clickToc } from "../util/toc";
+import { expandMarker } from "./expandMarker";
+import { highlightToolbarIR } from "./highlightToolbarIR";
+import { input } from "./input";
+import { processAfterRender, processHint } from "./process";
 
 class IR {
     public range: Range;
@@ -64,6 +64,7 @@ class IR {
 
         event.clipboardData.setData("text/plain", vditor.lute.VditorIRDOM2Md(tempElement.innerHTML).trim());
         event.clipboardData.setData("text/html", "");
+        return vditor.lute.VditorIRDOM2Md(tempElement.innerHTML).trim()
     }
 
     private bindEvent(vditor: IVditor) {
@@ -262,4 +263,5 @@ class IR {
     }
 }
 
-export {IR};
+export { IR };
+

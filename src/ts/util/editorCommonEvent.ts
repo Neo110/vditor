@@ -1,21 +1,21 @@
-import {Constants} from "../constants";
-import {processHeading} from "../ir/process";
-import {processKeydown as irProcessKeydown} from "../ir/processKeydown";
-import {getMarkdown} from "../markdown/getMarkdown";
-import {previewImage} from "../preview/image";
-import {processHeading as processHeadingSV} from "../sv/process";
-import {processKeydown as mdProcessKeydown} from "../sv/processKeydown";
-import {setEditMode} from "../toolbar/EditMode";
-import {hidePanel} from "../toolbar/setToolbar";
-import {afterRenderEvent} from "../wysiwyg/afterRenderEvent";
-import {processKeydown} from "../wysiwyg/processKeydown";
-import {removeHeading, setHeading} from "../wysiwyg/setHeading";
-import {getEventName, isCtrl} from "./compatibility";
-import {execAfterRender, paste} from "./fixBrowserBehavior";
-import {getSelectText} from "./getSelectText";
-import {hasClosestByAttribute, hasClosestByMatchTag} from "./hasClosest";
-import {matchHotKey} from "./hotKey";
-import {getCursorPosition, getEditorRange} from "./selection";
+import { Constants } from "../constants";
+import { processHeading } from "../ir/process";
+import { processKeydown as irProcessKeydown } from "../ir/processKeydown";
+import { getMarkdown } from "../markdown/getMarkdown";
+import { previewImage } from "../preview/image";
+import { processHeading as processHeadingSV } from "../sv/process";
+import { processKeydown as mdProcessKeydown } from "../sv/processKeydown";
+import { setEditMode } from "../toolbar/EditMode";
+import { hidePanel } from "../toolbar/setToolbar";
+import { afterRenderEvent } from "../wysiwyg/afterRenderEvent";
+import { processKeydown } from "../wysiwyg/processKeydown";
+import { removeHeading, setHeading } from "../wysiwyg/setHeading";
+import { getEventName, isCtrl } from "./compatibility";
+import { execAfterRender, paste } from "./fixBrowserBehavior";
+import { getSelectText } from "./getSelectText";
+import { hasClosestByAttribute, hasClosestByMatchTag } from "./hasClosest";
+import { matchHotKey } from "./hotKey";
+import { getCursorPosition, getEditorRange } from "./selection";
 
 export const focusEvent = (vditor: IVditor, editorElement: HTMLElement) => {
     editorElement.addEventListener("focus", () => {
@@ -78,14 +78,23 @@ export const dropEvent = (vditor: IVditor, editorElement: HTMLElement) => {
 };
 
 export const copyEvent =
-    (vditor: IVditor, editorElement: HTMLElement, copy: (event: ClipboardEvent, vditor: IVditor) => void) => {
-        editorElement.addEventListener("copy", (event: ClipboardEvent) => copy(event, vditor));
+    (vditor: IVditor, editorElement: HTMLElement, copy: (event: ClipboardEvent, vditor: IVditor) => string) => {
+        editorElement.addEventListener("copy", (event: ClipboardEvent) => {
+            const text = copy(event, vditor);
+            if(vditor.options.copy ){
+                vditor.options.copy(text)
+            }
+        });
     };
 
 export const cutEvent =
-    (vditor: IVditor, editorElement: HTMLElement, copy: (event: ClipboardEvent, vditor: IVditor) => void) => {
+    (vditor: IVditor, editorElement: HTMLElement, copy: (event: ClipboardEvent, vditor: IVditor) => string) => {
         editorElement.addEventListener("cut", (event: ClipboardEvent) => {
-            copy(event, vditor);
+            const text = copy(event, vditor);
+            if(vditor.options.cut){
+                vditor.options.cut(text)
+            }
+
             // 获取 comment
             if (vditor.options.comment.enable && vditor.currentMode === "wysiwyg") {
                 vditor.wysiwyg.getComments(vditor);
@@ -262,3 +271,50 @@ export const selectEvent = (vditor: IVditor, editorElement: HTMLElement) => {
         };
     });
 };
+
+export const compositionEvent =(vditor: IVditor,editorElement: HTMLElement) => {
+  // 输入法开始事件
+  editorElement.addEventListener('compositionstart', (event: CompositionEvent) => {
+    // console.log('输入法开始:', event.data);
+    // 如果需要，可以在此保存当前位置
+    // vditor.setRangeSelection();
+
+  });
+
+  // 输入法更新事件
+  editorElement.addEventListener('compositionupdate', (event: CompositionEvent) => {
+    // console.log('输入法合成中:', event.data);
+
+    // 在此可以实时预览输入法合成字符
+    renderComposingPreview(event.data);
+  });
+
+  // 输入法结束事件（用户选择了字符）
+  editorElement.addEventListener('compositionend', (event: CompositionEvent) => {
+
+    // console.log('输入法结束:', event.data);
+
+    // 实际插入数据到编辑器
+    const finalText = event.data;
+    if (finalText && finalText.trim() !== '') {
+      // 使用execCommand安全插入
+      document.execCommand('insertText', false, finalText);
+
+      // 或者使用Vditor API
+      //   vditor.insertValue(finalText);
+      if (vditor.options.select) {
+        // vditor.options.select(finalText);
+        vditor.options.inputComposition(finalText)
+      }
+    }
+
+
+  });
+}
+// 输入法预览处理函数
+function renderComposingPreview(text: string) {
+  // 在此实现预览元素的创建和更新
+//   console.log('显示预览:', text);
+}
+
+

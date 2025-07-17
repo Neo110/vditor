@@ -4516,7 +4516,9 @@ var merge = function () {
 /* harmony export */   "im": () => (/* binding */ getSelectPosition),
 /* harmony export */   "$j": () => (/* binding */ setSelectionByPosition),
 /* harmony export */   "ib": () => (/* binding */ setRangeByWbr),
-/* harmony export */   "oC": () => (/* binding */ insertHTML)
+/* harmony export */   "oC": () => (/* binding */ insertHTML),
+/* harmony export */   "uN": () => (/* binding */ serializeRange),
+/* harmony export */   "_C": () => (/* binding */ deserializeRange)
 /* harmony export */ });
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(145);
 /* harmony import */ var _compatibility__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(410);
@@ -4794,6 +4796,59 @@ var insertHTML = function (html, vditor) {
         pasteTemplate.innerHTML = html;
         range.insertNode(pasteTemplate.content.cloneNode(true));
         range.collapse(false);
+        setSelectionFocus(range);
+    }
+};
+// 序列化 Range 到路径
+var serializeRange = function (vditor) {
+    var _a;
+    var range = getEditorRange(vditor);
+    if (!range)
+        return null;
+    // 获取编辑区域根节点（根据模式选择）
+    var editorRoot = (_a = vditor.wysiwyg) === null || _a === void 0 ? void 0 : _a.element;
+    // 序列化 Range 到路径
+    var serializeRangeToPath = function (container, offset) {
+        var path = [];
+        var node = container;
+        while (node !== editorRoot) {
+            var parent_2 = node.parentNode;
+            path.unshift(Array.from(parent_2.childNodes).indexOf(node));
+            node = parent_2;
+        }
+        return { path: path, offset: offset };
+    };
+    return {
+        start: serializeRangeToPath(range.startContainer, range.startOffset),
+        end: serializeRangeToPath(range.endContainer, range.endOffset)
+    };
+};
+var deserializeRange = function (vditor, serializedData) {
+    var _a, _b;
+    var editorRoot = ((_a = vditor.wysiwyg) === null || _a === void 0 ? void 0 : _a.element) || ((_b = vditor.sv) === null || _b === void 0 ? void 0 : _b.element);
+    // 通过路径获取 DOM 节点
+    var getNodeFromPath = function (path) {
+        // 将editorRoot作为Node类型
+        var node = editorRoot;
+        for (var _i = 0, path_1 = path; _i < path_1.length; _i++) {
+            var index = path_1[_i];
+            if (node.childNodes.length > index) {
+                node = node.childNodes[index];
+            }
+            else {
+                return null;
+            }
+        }
+        return node;
+    };
+    // 重建 Range
+    var range = document.createRange();
+    var startNode = getNodeFromPath(serializedData.start.path);
+    var endNode = getNodeFromPath(serializedData.end.path);
+    if (startNode && endNode) {
+        range.setStart(startNode, serializedData.start.offset);
+        range.setEnd(endNode, serializedData.end.offset);
+        // 恢复选区
         setSelectionFocus(range);
     }
 };
@@ -8824,11 +8879,19 @@ var dropEvent = function (vditor, editorElement) {
     });
 };
 var copyEvent = function (vditor, editorElement, copy) {
-    editorElement.addEventListener("copy", function (event) { return copy(event, vditor); });
+    editorElement.addEventListener("copy", function (event) {
+        var text = copy(event, vditor);
+        if (vditor.options.copy) {
+            vditor.options.copy(text);
+        }
+    });
 };
 var cutEvent = function (vditor, editorElement, copy) {
     editorElement.addEventListener("cut", function (event) {
-        copy(event, vditor);
+        var text = copy(event, vditor);
+        if (vditor.options.cut) {
+            vditor.options.cut(text);
+        }
         // 获取 comment
         if (vditor.options.comment.enable && vditor.currentMode === "wysiwyg") {
             vditor.wysiwyg.getComments(vditor);
@@ -9002,6 +9065,41 @@ var selectEvent = function (vditor, editorElement) {
         };
     });
 };
+var compositionEvent = function (vditor, editorElement) {
+    // 输入法开始事件
+    editorElement.addEventListener('compositionstart', function (event) {
+        // console.log('输入法开始:', event.data);
+        // 如果需要，可以在此保存当前位置
+        // vditor.setRangeSelection();
+    });
+    // 输入法更新事件
+    editorElement.addEventListener('compositionupdate', function (event) {
+        // console.log('输入法合成中:', event.data);
+        // 在此可以实时预览输入法合成字符
+        renderComposingPreview(event.data);
+    });
+    // 输入法结束事件（用户选择了字符）
+    editorElement.addEventListener('compositionend', function (event) {
+        // console.log('输入法结束:', event.data);
+        // 实际插入数据到编辑器
+        var finalText = event.data;
+        if (finalText && finalText.trim() !== '') {
+            // 使用execCommand安全插入
+            document.execCommand('insertText', false, finalText);
+            // 或者使用Vditor API
+            //   vditor.insertValue(finalText);
+            if (vditor.options.select) {
+                // vditor.options.select(finalText);
+                vditor.options.inputComposition(finalText);
+            }
+        }
+    });
+};
+// 输入法预览处理函数
+function renderComposingPreview(text) {
+    // 在此实现预览元素的创建和更新
+    //   console.log('显示预览:', text);
+}
 
 ;// CONCATENATED MODULE: ./src/ts/sv/process.ts
 
@@ -9574,6 +9672,7 @@ var input_input = function (vditor, range, event) {
         && event.inputType !== "formatIndent"
         && event.inputType !== "" // document.execCommand('unlink', false)
         || !event) {
+        console.log(" ### event.inputType ", event);
         var previousAEmptyElement = previoueIsEmptyA(range.startContainer);
         if (previousAEmptyElement) {
             // 链接结尾回车不应该复制到下一行 https://github.com/Vanessa219/vditor/issues/163
@@ -11823,6 +11922,7 @@ var IR = /** @class */ (function () {
         tempElement.appendChild(range.cloneContents());
         event.clipboardData.setData("text/plain", vditor.lute.VditorIRDOM2Md(tempElement.innerHTML).trim());
         event.clipboardData.setData("text/html", "");
+        return vditor.lute.VditorIRDOM2Md(tempElement.innerHTML).trim();
     };
     IR.prototype.bindEvent = function (vditor) {
         var _this = this;
@@ -12445,7 +12545,9 @@ var Editor = /** @class */ (function () {
     Editor.prototype.copy = function (event, vditor) {
         event.stopPropagation();
         event.preventDefault();
-        event.clipboardData.setData("text/plain", getSelectText(vditor[vditor.currentMode].element));
+        var text = getSelectText(vditor[vditor.currentMode].element);
+        event.clipboardData.setData("text/plain", text);
+        return text;
     };
     Editor.prototype.bindEvent = function (vditor) {
         var _this = this;
@@ -14862,6 +14964,7 @@ var WYSIWYG = /** @class */ (function () {
         dropEvent(vditor, this.element);
         copyEvent(vditor, this.element, this.copy);
         cutEvent(vditor, this.element, this.copy);
+        compositionEvent(vditor, this.element);
         if (vditor.options.comment.enable) {
             this.selectPopover.querySelector("button").onclick = function () {
                 var id = Lute.NewNodeID();
@@ -15015,7 +15118,7 @@ var WYSIWYG = /** @class */ (function () {
             }
             event.clipboardData.setData("text/plain", codeText);
             event.clipboardData.setData("text/html", "");
-            return;
+            return codeText;
         }
         var aElement = (0,hasClosest/* hasClosestByMatchTag */.lG)(range.startContainer, "A");
         var aEndElement = (0,hasClosest/* hasClosestByMatchTag */.lG)(range.endContainer, "A");
@@ -15026,12 +15129,13 @@ var WYSIWYG = /** @class */ (function () {
             }
             event.clipboardData.setData("text/plain", "[".concat(range.toString(), "](").concat(aElement.getAttribute("href")).concat(aTitle, ")"));
             event.clipboardData.setData("text/html", "");
-            return;
+            return "[".concat(range.toString(), "](").concat(aElement.getAttribute("href")).concat(aTitle, ")");
         }
         var tempElement = document.createElement("div");
         tempElement.appendChild(range.cloneContents());
         event.clipboardData.setData("text/plain", vditor.lute.VditorDOM2Md(tempElement.innerHTML).trim());
         event.clipboardData.setData("text/html", "");
+        return vditor.lute.VditorDOM2Md(tempElement.innerHTML).trim();
     };
     WYSIWYG.prototype.bindEvent = function (vditor) {
         var _this = this;
@@ -15810,19 +15914,30 @@ var Vditor = /** @class */ (function (_super) {
             enableInput: false,
         });
     };
+    /** 当前光标位置序列化 */
+    Vditor.prototype.getCursorSerializeRange = function () {
+        return (0,selection/* serializeRange */.uN)(this.vditor);
+    };
+    /** 当前光标位置反序列化 */
+    Vditor.prototype.setCursorDeserializeRange = function (serializedData) {
+        (0,selection/* deserializeRange */._C)(this.vditor, serializedData);
+        this.vditor.wysiwyg.element.focus();
+    };
     /** 设置光标 */
     Vditor.prototype.setUpdateValue = function (value, render) {
         if (render === void 0) { render = true; }
-        // 设置光标
+        // 获取当前选区
+        console.log("11"); // 可以保留
         var range = (0,selection/* getEditorRange */.zh)(this.vditor);
         range.collapse(true);
-        renderDomByMd(this.vditor, value, {
-            enableAddUndoStack: true,
-            enableHint: false,
-            enableInput: false,
-        });
-        // 操作 DOM 后恢复光标
+        // 设置光标位置：向前移动2个位置（但需要处理边界）
+        var newOffset = Math.max(0, range.startOffset - 2); // 确保不会变成负数
+        // 检查节点是否有效
+        range.setStart(range.startContainer, newOffset);
+        range.collapse(true); // 确保折叠选区
+        console.log("33"); // 可以保留
         (0,selection/* setSelectionFocus */.Hc)(range);
+        console.log("6688"); // 可以保留
     };
     Vditor.prototype.init = function (id, mergedOptions) {
         var _this = this;
