@@ -22,6 +22,10 @@ export const getEditorRange = (vditor: IVditor) => {
 };
 
 export const getCursorPosition = (editor: HTMLElement) => {
+    // 优化默认滚动报错BUG
+    if (window.focus && !editor.contains(document.activeElement)) {
+        return;
+    }
     const range = window.getSelection().getRangeAt(0);
     if (!editor.contains(range.startContainer) && !hasClosestByClassName(range.startContainer, "vditor-panel--none")) {
         return {

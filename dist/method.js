@@ -1828,6 +1828,10 @@ var getEditorRange = function (vditor) {
     return range;
 };
 var getCursorPosition = function (editor) {
+    // 优化默认滚动报错BUG
+    if (window.focus && !editor.contains(document.activeElement)) {
+        return;
+    }
     var range = window.getSelection().getRangeAt(0);
     if (!editor.contains(range.startContainer) && !hasClosestByClassName(range.startContainer, "vditor-panel--none")) {
         return {
